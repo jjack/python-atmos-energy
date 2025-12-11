@@ -1,0 +1,18 @@
+{
+	"name": "Atmos Energy Python Dev Container",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/python:2-3.14-trixie",
+
+    "containerEnv": {
+        "UV_LINK_MODE": "copy"
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"charliermarsh.ruff"
+			]
+		}
+	}
+}
