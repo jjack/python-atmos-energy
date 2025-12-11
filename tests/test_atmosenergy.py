@@ -91,11 +91,9 @@ class TestRequest:
         mock_session_post.return_value = mock_response
 
         data = {'key': 'value'}
-        result = atmos_client._request(
-            'http://example.com', method='POST', data=data)
+        result = atmos_client._request('http://example.com', method='POST', data=data)
 
-        mock_session_post.assert_called_once_with(
-            'http://example.com', data=data)
+        mock_session_post.assert_called_once_with('http://example.com', data=data)
         assert result == mock_response
 
 
@@ -108,8 +106,8 @@ class TestMkDownloadUrlString:
         mock_datetime.today.return_value.strftime.return_value = '12102025120000'
         url = atmos_client._mk_download_url_string('Current')
         assert (
-            url ==
-            'https://www.atmosenergy.com/accountcenter/usagehistory/dailyUsageDownload.html?&billingPeriod=Current&12102025120000'
+            url
+            == 'https://www.atmosenergy.com/accountcenter/usagehistory/dailyUsageDownload.html?&billingPeriod=Current&12102025120000'
         )
 
     @patch('atmos_energy.datetime')
@@ -132,6 +130,7 @@ class TestMkBillingPeriodString:
         """Test billing period string for historical data."""
         with patch('atmos_energy.datetime') as mock_datetime:
             from datetime import datetime
+
             mock_datetime.today.return_value = datetime(2025, 12, 10)
             period = atmos_client._mk_billing_period_string(2)
             assert ',' in period  # Format is "Month,Year"
@@ -143,17 +142,13 @@ class TestValidateResponseContent:
 
     def test_validate_response_content_valid(self, atmos_client):
         """Test validation with correct content type."""
-        response = MagicMock(
-            headers={'Content-Type': DOWNLOAD_CONTENT_TYPE}
-        )
+        response = MagicMock(headers={'Content-Type': DOWNLOAD_CONTENT_TYPE})
         # Should not raise
         atmos_client._validate_response_content(response)
 
     def test_validate_response_content_invalid(self, atmos_client):
         """Test validation with incorrect content type."""
-        response = MagicMock(
-            headers={'Content-Type': 'text/html'}
-        )
+        response = MagicMock(headers={'Content-Type': 'text/html'})
         with pytest.raises(Exception, match='Unexpected Content Type'):
             atmos_client._validate_response_content(response)
 
@@ -239,8 +234,9 @@ class TestLogin:
 
     @patch('atmos_energy.requests.Session.get')
     @patch('atmos_energy.requests.Session.post')
-    def test_login_invalid_credentials(self, mock_session_post, mock_session_get,
-                                       atmos_client):
+    def test_login_invalid_credentials(
+        self, mock_session_post, mock_session_get, atmos_client
+    ):
         """Test login error with invalid credentials."""
         form_id = 'areallyawesomeformid'
 

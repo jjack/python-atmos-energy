@@ -14,11 +14,10 @@ dependencies = [
     { name = "xlrd" },
 ]
 
-[package.dev-dependencies]
+[package.optional-dependencies]
 dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "pyyaml" },
     { name = "requests-mock" },
     { name = "ruff" },
     { name = "uv" },
@@ -27,21 +26,17 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14.3" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.2" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "python-dateutil", specifier = ">=2.9.0.post0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "requests", specifier = ">=2.32.5" },
+    { name = "requests-mock", marker = "extra == 'dev'", specifier = ">=1.12.1" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.14.8" },
+    { name = "uv", marker = "extra == 'dev'", specifier = ">=0.9.17" },
     { name = "xlrd", specifier = ">=2.0.2" },
 ]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=9.0.2" },
-    { name = "pytest-cov", specifier = ">=7.0.0" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "requests-mock", specifier = ">=1.12.1" },
-    { name = "ruff", specifier = ">=0.14.8" },
-    { name = "uv", specifier = ">=0.9.17" },
-]
+provides-extras = ["dev"]
 
 [[package]]
 name = "beautifulsoup4"

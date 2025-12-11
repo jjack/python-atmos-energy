@@ -132,9 +132,7 @@ class TestLoadConfig:
     def test_load_config_valid_yaml(self, tmp_path):
         """Test loading valid YAML config file."""
         config_file = tmp_path / 'config.yaml'
-        config_file.write_text(
-            'username: testuser\npassword: testpass\nmonths: 3\n'
-        )
+        config_file.write_text('username: testuser\npassword: testpass\nmonths: 3\n')
 
         config = load_config(str(config_file))
 
@@ -297,9 +295,10 @@ class TestMainCli:
         mock_client.get_usage.return_value = [(1765398645, 1.5)] * 90
         mock_atmos_class.return_value = mock_client
 
-        with patch('sys.argv', [
-            'cli', '--username', 'user', '--password', 'pass', '--months', '3'
-        ]):
+        with patch(
+            'sys.argv',
+            ['cli', '--username', 'user', '--password', 'pass', '--months', '3'],
+        ):
             from atmos_energy.cli import main
 
             main()
@@ -315,10 +314,18 @@ class TestMainCli:
         mock_client.get_usage.return_value = data
         mock_atmos_class.return_value = mock_client
 
-        with patch('sys.argv', [
-            'cli', '--username', 'user', '--password', 'pass', '--output',
-            'usage.csv'
-        ]):
+        with patch(
+            'sys.argv',
+            [
+                'cli',
+                '--username',
+                'user',
+                '--password',
+                'pass',
+                '--output',
+                'usage.csv',
+            ],
+        ):
             from atmos_energy.cli import main
 
             main()
@@ -348,8 +355,9 @@ class TestMainCli:
     @patch('atmos_energy.cli.load_config')
     @patch('atmos_energy.cli.AtmosEnergy')
     @patch('atmos_energy.cli.print_table')
-    def test_main_with_config_file(self, mock_print_table, mock_atmos_class,
-                                   mock_load_config):
+    def test_main_with_config_file(
+        self, mock_print_table, mock_atmos_class, mock_load_config
+    ):
         """Test using YAML config file for credentials."""
         mock_config = {
             'username': 'config_user',
@@ -406,9 +414,9 @@ class TestMainCli:
         mock_client.get_usage.return_value = [(1762263045, 1.5)]
         mock_atmos_class.return_value = mock_client
 
-        with patch('sys.argv', [
-            'cli', '--username', 'user', '--password', 'pass', '--verbose'
-        ]):
+        with patch(
+            'sys.argv', ['cli', '--username', 'user', '--password', 'pass', '--verbose']
+        ):
             from atmos_energy.cli import main
 
             main()
