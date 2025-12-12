@@ -19,7 +19,7 @@
 				"charliermarsh.ruff"
 			],
 			"settings": {
-				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
 				"python.linting.enabled": true,
 				"python.linting.ruffEnabled": true,
 				"python.formatting.provider": "ruff",
@@ -37,7 +37,7 @@
 		}
 	},
 
-	"postCreateCommand": "pip install uv && uv sync --all-groups",
+	"postCreateCommand": "pip install -q uv && uv sync --all-groups --extra dev",
 
 	"remoteUser": "vscode"
 }
