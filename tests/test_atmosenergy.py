@@ -1,5 +1,7 @@
 """Unit tests for the AtmosEnergy class."""
 
+# pylint: disable=protected-access, redefined-outer-name
+
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -91,9 +93,11 @@ class TestRequest:
         mock_session_post.return_value = mock_response
 
         data = {'key': 'value'}
-        result = atmos_client._request('http://example.com', method='POST', data=data)
+        result = atmos_client._request(
+            'http://example.com', method='POST', data=data)
 
-        mock_session_post.assert_called_once_with('http://example.com', data=data)
+        mock_session_post.assert_called_once_with(
+            'http://example.com', data=data)
         assert result == mock_response
 
 
@@ -105,6 +109,7 @@ class TestMkDownloadUrlString:
         """Test URL generation for current period."""
         mock_datetime.today.return_value.strftime.return_value = '12102025120000'
         url = atmos_client._mk_download_url_string('Current')
+        # pylint: disable=line-too-long
         assert (
             url
             == 'https://www.atmosenergy.com/accountcenter/usagehistory/dailyUsageDownload.html?&billingPeriod=Current&12102025120000'
@@ -122,14 +127,14 @@ class TestMkBillingPeriodString:
     """Tests for the _mk_billing_period_string method."""
 
     def test_mk_billing_period_string_current(self, atmos_client):
-        """Test billing period string for current month (1 month)."""
-        period = atmos_client._mk_billing_period_string(1)
+        """Test billing period string for current month (0 months ago)."""
+        period = atmos_client._mk_billing_period_string(0)
         assert period == 'Current'
 
     def test_mk_billing_period_string_historical(self, atmos_client):
-        """Test billing period string for historical data."""
+        """Test billing period string for historical data (2 months ago)."""
         with patch('atmos_energy.datetime') as mock_datetime:
-            from datetime import datetime
+            from datetime import datetime  # pylint: disable=import-outside-toplevel
 
             mock_datetime.today.return_value = datetime(2025, 12, 10)
             period = atmos_client._mk_billing_period_string(2)
@@ -194,6 +199,7 @@ class TestLogin:
         """Test successful login."""
         form_id = 'areallyawesomeformid'
 
+        # pylint: disable=line-too-long
         mock_get_response = MagicMock(
             content=f'<input type="hidden" name="formId" value="{form_id}" id="authenticate_formId"/>',
             url=LOGIN_FORM_ID_URL,
@@ -240,6 +246,7 @@ class TestLogin:
         """Test login error with invalid credentials."""
         form_id = 'areallyawesomeformid'
 
+        # pylint: disable=line-too-long
         mock_get_response = MagicMock(
             content=f'<input type="hidden" name="formId" value="{form_id}" id="authenticate_formId"/>',
             url=LOGIN_FORM_ID_URL,
@@ -320,9 +327,11 @@ class TestGetUsage:
 
         processed = atmos_client.get_usage(6)
 
-        assert processed == usage_xls_data
-        # Should make a single request with multi-month billing period
-        mock_session_get.assert_called_once()
+        # Should return 6 copies of the data (one for each month)
+        expected = usage_xls_data * 6
+        assert processed == expected
+        # Should make 6 requests (one for each month)
+        assert mock_session_get.call_count == 6
 
     @patch('requests.Session.get')
     def test_get_usage_invalid_content_type(self, mock_session_get, atmos_client):

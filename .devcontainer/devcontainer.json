@@ -3,6 +3,11 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/python:2-3.14-trixie",
 
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+
     "containerEnv": {
         "UV_LINK_MODE": "copy"
 	},
@@ -11,8 +16,25 @@
 		"vscode": {
 			"extensions": [
 				"ms-python.python",
-				"charliermarsh.ruff"
-			]
+				"charliermarsh.ruff",
+				"ms-python.pylint",
+				"ms-python.black-formatter"
+			],
+			"settings": {
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.linting.enabled": true,
+				"python.linting.ruffEnabled": true,
+				"python.formatting.provider": "ruff",
+				"editor.formatOnPaste": true,
+				"editor.formatOnSave": true,
+				"editor.codeActionsOnSave": {
+					"source.fixAll.ruff": "explicit"
+				}
+			}
 		}
-	}
+	},
+
+	"postCreateCommand": "pip install uv && uv sync --all-groups",
+
+	"remoteUser": "vscode"
 }

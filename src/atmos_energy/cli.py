@@ -44,12 +44,12 @@ def write_csv(data: list[tuple[int, float]], output_file: str) -> None:
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, 'w') as f:
+    with open(output_path, 'w', encoding='utf-8') as f:
         f.write('timestamp,value\n')
         for timestamp, value in data:
             f.write(f'{format_timestamp(timestamp)},{value}\n')
 
-    _LOGGER.debug(f'Data written to {output_path}')
+    _LOGGER.debug('Data written to %s', output_path)
 
 
 def print_table(data: list[tuple[int, float]]) -> None:
@@ -82,7 +82,7 @@ def load_config(config_file: str) -> dict:
         raise FileNotFoundError(f'Config file not found: {config_file}')
 
     try:
-        with open(config_path, 'r') as f:
+        with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
     except yaml.YAMLError as e:
         raise ValueError(f'Invalid YAML in config file: {e}') from e
@@ -145,8 +145,10 @@ Example usage:
   atmos-energy --config ~/.atmos_energy/config.yaml
         """,
     )
-    parser.add_argument('--username', '-u', help='Atmos Energy account username')
-    parser.add_argument('--password', '-p', help='Atmos Energy account password')
+    parser.add_argument('--username', '-u',
+                        help='Atmos Energy account username')
+    parser.add_argument('--password', '-p',
+                        help='Atmos Energy account password')
     parser.add_argument(
         '--config',
         '-c',
@@ -183,9 +185,9 @@ Example usage:
         try:
             config = load_config(args.config)
             args = merge_config(args, config)
-            _LOGGER.debug(f'Loaded configuration from {args.config}')
+            _LOGGER.debug('Loaded configuration from %s', args.config)
         except (FileNotFoundError, ValueError) as e:
-            _LOGGER.error(f'Config error: {e}')
+            _LOGGER.error('Config error: %s', e)
             sys.exit(1)
 
     # Validate credentials
@@ -194,30 +196,22 @@ Example usage:
             'Username and password must be provided via --username/--password or --config'
         )
 
+    # Initialize client
+    client = AtmosEnergy(args.username, args.password)
     try:
-        # Initialize client
-        client = AtmosEnergy(args.username, args.password)
-
-        _LOGGER.debug('Logging in to Atmos Energy...')
         client.login()
-        _LOGGER.debug('Successfully logged in')
-
-        _LOGGER.debug(f'Retrieving usage data for {args.months} month(s)...')
         all_data = client.get_usage(args.months)
-        _LOGGER.debug(f'Retrieved {len(all_data)} usage records')
 
         # Output data
         if args.output:
             write_csv(all_data, args.output)
         else:
             print_table(all_data)
-
-        _LOGGER.debug('Done')
-        client.logout()
-
-    except Exception as e:
-        _LOGGER.error(f'Error: {e}')
+    except Exception as e:  # pylint: disable=broad-except
+        _LOGGER.error('Error retrieving usage data: %s', e)
         sys.exit(1)
+    finally:
+        client.logout()
 
 
 if __name__ == '__main__':

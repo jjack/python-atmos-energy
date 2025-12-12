@@ -45,7 +45,7 @@ class AtmosEnergy:
         self._session = requests.Session()
 
     def _request(
-        self, url, method: str = 'GET', data: dict | None = None
+        self, url: str, method: str = 'GET', data: dict | None = None
     ) -> requests.Response:
         """
         Make an HTTP request through the session and log details.
@@ -68,7 +68,12 @@ class AtmosEnergy:
         else:
             response = self._session.get(url)
 
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError:
+            _LOGGER.error('HTTP request failed: %s %s',
+                          response.status_code, response.reason)
+            raise
 
         _LOGGER.debug(
             'Received %s response with status code %d',
@@ -93,21 +98,22 @@ class AtmosEnergy:
         timestamp = datetime.today().strftime('%m%d%Y%H:%M:%S')
         return DOWNLOAD_URL.format(billing_period=billing_period, timestamp=timestamp)
 
-    def _mk_billing_period_string(self, billing_periods: int) -> str:
+    def _mk_billing_period_string(self, months_ago: int) -> str:
         """
         Generate the billing period string for usage data retrieval.
 
         Args:
-            billing_periods (int): The number of total billing periods to retrieve.
-                If 1, returns 'Current'. Otherwise returns a month/year string.
+            months_ago (int): The number of months ago to retrieve data for.
+                If 0, returns 'Current'. Otherwise returns a month/year string
+                for that many months in the past.
 
         Returns:
             str: The formatted billing period (e.g., 'Current' or 'December,2025').
         """
-        if billing_periods == DEFAULT_USAGE_MONTHS:
+        if months_ago == 0:
             return DEFAULT_BILLING_PERIOD
 
-        historical_period = datetime.today() - relativedelta(months=billing_periods)
+        historical_period = datetime.today() - relativedelta(months=months_ago)
         return historical_period.strftime('%B,%Y')
 
     def _validate_response_content(self, response: requests.Response) -> None:
@@ -118,7 +124,7 @@ class AtmosEnergy:
             response (requests.Response): The HTTP response object to validate.
 
         Raises:
-            Exception: If the Content-Type header is not 'application/vnd.ms-excel'.
+            TypeError: If the Content-Type header is not 'application/vnd.ms-excel'.
         """
         content_type = response.headers.get('Content-Type', '')
 
@@ -126,9 +132,9 @@ class AtmosEnergy:
             _LOGGER.error(
                 'Unexpected content type: %s. Expected: %s',
                 content_type,
-                DOWNLOAD_CONTENT_TYPE,
+                DOWNLOAD_CONTENT_TYPE
             )
-            raise Exception('Unexpected Content Type')
+            raise TypeError('Unexpected Content Type')
 
     def _fmt_usage(self, raw_usage: bytes) -> list[tuple[int, float]]:
         """
@@ -141,16 +147,14 @@ class AtmosEnergy:
             list[tuple[int, float]]: A list of tuples containing (Unix timestamp, reading).
 
         Raises:
-            Exception: If the workbook cannot be opened or parsed.
+            ValueError: If the workbook cannot be opened or parsed.
         """
-
         try:
             workbook = xlrd.open_workbook(file_contents=raw_usage)
-        except Exception as e:
+            sheet = workbook.sheet_by_index(0)
+        except xlrd.biffh.XLRDError as e:
             _LOGGER.error('Unable to open workbook', exc_info=True)
-            raise Exception('Unable to Open Workbook') from e
-
-        sheet = workbook.sheet_by_index(0)
+            raise ValueError('Unable to Open Workbook') from e
 
         _LOGGER.debug('Processing %d rows of usage data', sheet.nrows - 1)
         usage = []
@@ -169,7 +173,7 @@ class AtmosEnergy:
         Fetches the login form to extract the form ID, then submits credentials.
 
         Raises:
-            Exception: If the login form ID cannot be found or login fails.
+            ValueError: If the login form ID cannot be found or login fails.
         """
         _LOGGER.debug('Fetching login form to retrieve form ID')
         response = self._request(LOGIN_FORM_ID_URL)
@@ -178,7 +182,7 @@ class AtmosEnergy:
         form_id = soup.find('input', {'id': 'authenticate_formId'})
         if not form_id:
             _LOGGER.error('Could Not Find Login Form ID')
-            raise Exception('Could Not Find Login Form ID')
+            raise ValueError('Could Not Find Login Form ID')
 
         _LOGGER.debug('Got form ID: %s', form_id.get('value'))
 
@@ -191,8 +195,9 @@ class AtmosEnergy:
         _LOGGER.debug('Submitting login form')
         response = self._request(LOGIN_URL, method='POST', data=login)
         if response.url == LOGIN_URL:
-            _LOGGER.error('Login failed, please check your credentials')
-            raise Exception('Login Failed')
+            _LOGGER.error(
+                'Login failed, please check your credentials')
+            raise ValueError('Login Failed')
 
     def logout(self) -> None:
         """
@@ -214,16 +219,22 @@ class AtmosEnergy:
             list[tuple[int, float]]: A list of tuples containing (Unix timestamp, reading).
 
         Raises:
-            Exception: If the response content type is invalid or workbook parsing fails.
+            TypeError: If the response content type is invalid or workbook parsing fails.
         """
-        billing_period = self._mk_billing_period_string(months)
-        download_url = self._mk_download_url_string(billing_period)
-        response = self._request(download_url)
+        all_usage = []
 
-        self._validate_response_content(response)
+        # Get data for each requested billing period
+        for period_offset in range(months):
+            billing_period = self._mk_billing_period_string(period_offset)
+            download_url = self._mk_download_url_string(billing_period)
+            response = self._request(download_url)
 
-        processed = self._fmt_usage(response.content)
-        return processed
+            self._validate_response_content(response)
+
+            period_usage = self._fmt_usage(response.content)
+            all_usage.extend(period_usage)
+
+        return all_usage
 
 
 __all__ = ['AtmosEnergy']
