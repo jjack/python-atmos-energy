@@ -36,18 +36,18 @@ client.logout()
 
 ## Documentation
 
-- **[API Reference](../../wiki/API-Reference)** - Detailed API documentation
-- **[CLI Usage](../../wiki/CLI-Usage)** - Command-line options and configuration files
-- **[Data Formats](../../wiki/Data-Formats)** - Usage data and CSV output formats
-- **[Development](../../wiki/Development)** - Setup, testing, and code quality
+- **[API Reference](https://github.com/jjack/python-atmos-energy/wiki/API-Reference)** - Detailed API documentation
+- **[CLI Usage](https://github.com/jjack/python-atmos-energy/wiki/CLI-Usage)** - Command-line options and configuration files
+- **[Data Formats](https://github.com/jjack/python-atmos-energy/wiki/Data-Formats)** - Usage data and CSV output formats
+- **[Development](https://github.com/jjack/python-atmos-energy/wiki/Development)** - Setup, testing, and code quality
 
 ## License
 
-Apache 2.0 License - see [LICENSE](LICENSE) for details
+Apache 2.0 License - see [LICENSE](https://github.com/jjack/python-atmos-energy/blob/main/LICENSE) for details
 
 ## Contributing
 
-Contributions are welcome! Please open a [GitHub Issue](../../issues) or submit a Pull Request.
+Contributions are welcome! Please open a [GitHub Issue](https://github.com/jjack/python-atmos-energy/issues) or submit a [Pull Request](https://github.com/jjack/python-atmos-energy/pulls).
 
 ## Disclaimer
 
