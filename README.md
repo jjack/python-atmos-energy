@@ -1,14 +1,13 @@
 # Atmos Energy API Client
 
-A Python client library for retrieving energy usage data from the Atmos Energy Account Center. Primarily intended for use with [the Home Assistant Atmos Energy Addon](https://github.com/jjack/hass-atmos-energy).
+A Python client library for retrieving energy usage data from the Atmos Energy Account Center. Primarily intended for use with the [Home Assistant Atmos Energy Addon](https://github.com/jjack/hass-atmos-energy) or the [Home Assistant Import Energy Data Project](https://github.com/patrickvorgers/Home-Assistant-Import-Energy-Data)
 
 ## Features
 
-- 🔐 Secure authentication with Atmos Energy Account Center
-- 📊 Retrieve current and historical usage data
-- 📁 YAML configuration file support
-- 📈 CSV export functionality
-- ✅ Comprehensive test suite
+- Secure authentication with Atmos Energy Account Center
+- Retrieve current and historical usage data
+- YAML configuration file support
+- CSV export functionality
 
 ## Installation
 
