@@ -132,8 +132,7 @@ class TestLoadConfig:
     def test_load_config_valid_yaml(self, tmp_path):
         """Test loading valid YAML config file."""
         config_file = tmp_path / 'config.yaml'
-        config_file.write_text(
-            'username: testuser\npassword: testpass\nmonths: 3\n')
+        config_file.write_text('username: testuser\npassword: testpass\nmonths: 3\n')
 
         config = load_config(str(config_file))
 
@@ -353,9 +352,7 @@ class TestMainCli:
 
     @patch('atmos_energy.cli.load_config')
     @patch('atmos_energy.cli.AtmosEnergy')
-    def test_main_with_config_file(
-        self, mock_atmos_class, mock_load_config
-    ):
+    def test_main_with_config_file(self, mock_atmos_class, mock_load_config):
         """Test using YAML config file for credentials."""
         mock_config = {
             'username': 'config_user',
@@ -410,8 +407,7 @@ class TestMainCli:
         mock_atmos_class.return_value = mock_client
 
         with patch(
-            'sys.argv', ['cli', '--username', 'user',
-                         '--password', 'pass', '--verbose']
+            'sys.argv', ['cli', '--username', 'user', '--password', 'pass', '--verbose']
         ):
             from atmos_energy.cli import main  # pylint: disable=import-outside-toplevel
 

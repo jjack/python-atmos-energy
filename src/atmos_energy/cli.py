@@ -145,10 +145,8 @@ Example usage:
   atmos-energy --config ~/.atmos_energy/config.yaml
         """,
     )
-    parser.add_argument('--username', '-u',
-                        help='Atmos Energy account username')
-    parser.add_argument('--password', '-p',
-                        help='Atmos Energy account password')
+    parser.add_argument('--username', '-u', help='Atmos Energy account username')
+    parser.add_argument('--password', '-p', help='Atmos Energy account password')
     parser.add_argument(
         '--config',
         '-c',

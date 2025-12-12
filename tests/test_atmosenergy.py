@@ -94,19 +94,17 @@ class TestRequest:
         mock_session_post.return_value = mock_response
 
         data = {'key': 'value'}
-        result = atmos_client._request(
-            'http://example.com', method='POST', data=data)
+        result = atmos_client._request('http://example.com', method='POST', data=data)
 
-        mock_session_post.assert_called_once_with(
-            'http://example.com', data=data)
+        mock_session_post.assert_called_once_with('http://example.com', data=data)
         assert result == mock_response
 
     @patch('atmos_energy.requests.Session.get')
     def test_request_http_error(self, mock_session_get, atmos_client):
         """Test handling of HTTP errors."""
         mock_response = MagicMock(status_code=401)
-        mock_response.raise_for_status.side_effect = (
-            requests.exceptions.HTTPError(response=mock_response)
+        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
+            response=mock_response
         )
         mock_response.reason = 'Unauthorized'
         mock_session_get.return_value = mock_response

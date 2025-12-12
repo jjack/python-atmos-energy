@@ -71,8 +71,9 @@ class AtmosEnergy:
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError:
-            _LOGGER.error('HTTP request failed: %s %s',
-                          response.status_code, response.reason)
+            _LOGGER.error(
+                'HTTP request failed: %s %s', response.status_code, response.reason
+            )
             raise
 
         _LOGGER.debug(
@@ -132,7 +133,7 @@ class AtmosEnergy:
             _LOGGER.error(
                 'Unexpected content type: %s. Expected: %s',
                 content_type,
-                DOWNLOAD_CONTENT_TYPE
+                DOWNLOAD_CONTENT_TYPE,
             )
             raise TypeError('Unexpected Content Type')
 
@@ -195,8 +196,7 @@ class AtmosEnergy:
         _LOGGER.debug('Submitting login form')
         response = self._request(LOGIN_URL, method='POST', data=login)
         if response.url == LOGIN_URL:
-            _LOGGER.error(
-                'Login failed, please check your credentials')
+            _LOGGER.error('Login failed, please check your credentials')
             raise ValueError('Login Failed')
 
     def logout(self) -> None:
