@@ -4,11 +4,10 @@ A Python client library for retrieving energy usage data from the Atmos Energy A
 
 ## Features
 
-- 🔐 Secure authentication with Atmos Energy Account Center
-- 📊 Retrieve current and historical usage data
-- 📁 YAML configuration file support
-- 📈 CSV export functionality
-- ✅ Comprehensive test suite
+- Secure authentication with Atmos Energy Account Center
+- Retrieve current and historical usage data
+- YAML configuration file support
+- CSV export functionality
 
 ## Installation
 
