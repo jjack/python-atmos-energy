@@ -12,9 +12,9 @@ from atmos_energy import AtmosEnergy
 from atmos_energy.constants import (
     DOWNLOAD_CONTENT_TYPE,
     DOWNLOAD_URL,
+    LOGGED_IN_URL,
     LOGIN_FORM_ID_URL,
     LOGIN_URL,
-    LOGGED_IN_URL,
     LOGOUT_URL,
 )
 
@@ -104,7 +104,7 @@ class TestRequest:
         """Test handling of HTTP errors."""
         mock_response = MagicMock(status_code=401)
         mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
-            response=mock_response
+            response=mock_response,
         )
         mock_response.reason = 'Unauthorized'
         mock_session_get.return_value = mock_response
@@ -119,7 +119,7 @@ class TestMkDownloadUrlString:
     @patch('atmos_energy.datetime')
     def test_mk_download_url_string_current(self, mock_datetime, atmos_client):
         """Test URL generation for current period."""
-        mock_datetime.today.return_value.strftime.return_value = '12102025120000'
+        mock_datetime.now.return_value.strftime.return_value = '12102025120000'
         url = atmos_client._mk_download_url_string('Current')
         # pylint: disable=line-too-long
         assert (
@@ -130,7 +130,7 @@ class TestMkDownloadUrlString:
     @patch('atmos_energy.datetime')
     def test_mk_download_url_string_with_period(self, mock_datetime, atmos_client):
         """Test URL generation with specific billing period."""
-        mock_datetime.today.return_value.strftime.return_value = '12102025120000'
+        mock_datetime.now.return_value.strftime.return_value = '12102025120000'
         url = atmos_client._mk_download_url_string('December,2025')
         assert 'billingPeriod=December' in url
 
@@ -146,9 +146,17 @@ class TestMkBillingPeriodString:
     def test_mk_billing_period_string_historical(self, atmos_client):
         """Test billing period string for historical data (2 months ago)."""
         with patch('atmos_energy.datetime') as mock_datetime:
-            from datetime import datetime  # pylint: disable=import-outside-toplevel
+            from datetime import (  # pylint: disable=import-outside-toplevel
+                datetime,
+                timezone,
+            )
 
-            mock_datetime.today.return_value = datetime(2025, 12, 10)
+            mock_datetime.now.return_value = datetime(
+                2025,
+                12,
+                10,
+                tzinfo=timezone.utc,
+            )
             period = atmos_client._mk_billing_period_string(2)
             assert ',' in period  # Format is "Month,Year"
             assert '2025' in period
@@ -182,7 +190,7 @@ class TestFmtUsage:
     def test_fmt_usage_valid(self, atmos_client):
         """Test parsing valid Excel usage data."""
         path = Path(__file__).parent.resolve() / 'data' / 'usage.xls'
-        with open(path, 'rb') as f:
+        with path.open('rb') as f:
             raw_usage = f.read()
 
         processed = atmos_client._fmt_usage(raw_usage)
@@ -195,7 +203,7 @@ class TestFmtUsage:
     def test_fmt_usage_invalid_format(self, atmos_client):
         """Test error handling with invalid workbook format."""
         path = Path(__file__).parent.resolve() / 'data' / 'invalidformat.xls'
-        with open(path, 'rb') as f:
+        with path.open('rb') as f:
             raw_usage = f.read()
 
         with pytest.raises(Exception, match='Unable to Open Workbook'):
@@ -212,8 +220,12 @@ class TestLogin:
         form_id = 'areallyawesomeformid'
 
         # pylint: disable=line-too-long
+        html_content = (
+            f'<input type="hidden" name="formId" '
+            f'value="{form_id}" id="authenticate_formId"/>'
+        )
         mock_get_response = MagicMock(
-            content=f'<input type="hidden" name="formId" value="{form_id}" id="authenticate_formId"/>',
+            content=html_content,
             url=LOGIN_FORM_ID_URL,
             status_code=200,
         )
@@ -253,14 +265,21 @@ class TestLogin:
     @patch('atmos_energy.requests.Session.get')
     @patch('atmos_energy.requests.Session.post')
     def test_login_invalid_credentials(
-        self, mock_session_post, mock_session_get, atmos_client
+        self,
+        mock_session_post,
+        mock_session_get,
+        atmos_client,
     ):
         """Test login error with invalid credentials."""
         form_id = 'areallyawesomeformid'
 
         # pylint: disable=line-too-long
+        html_content = (
+            f'<input type="hidden" name="formId" '
+            f'value="{form_id}" id="authenticate_formId"/>'
+        )
         mock_get_response = MagicMock(
-            content=f'<input type="hidden" name="formId" value="{form_id}" id="authenticate_formId"/>',
+            content=html_content,
             url=LOGIN_FORM_ID_URL,
             status_code=200,
         )
@@ -304,7 +323,7 @@ class TestGetUsage:
     def test_get_usage_current_month(self, mock_session_get, atmos_client):
         """Test retrieving current month usage (single request)."""
         path = Path(__file__).parent.resolve() / 'data' / 'usage.xls'
-        with open(path, 'rb') as f:
+        with path.open('rb') as f:
             raw_usage = f.read()
 
         mock_get_response = MagicMock(
@@ -340,7 +359,7 @@ class TestGetUsage:
     def test_get_usage_invalid_workbook(self, mock_session_get, atmos_client):
         """Test error handling with invalid workbook data."""
         path = Path(__file__).parent.resolve() / 'data' / 'invalidformat.xls'
-        with open(path, 'rb') as f:
+        with path.open('rb') as f:
             raw_usage = f.read()
 
         mock_get_response = MagicMock(
@@ -363,7 +382,7 @@ class TestGetUsageHistory:
     def test_get_usage_history_single_month(self, mock_session_get, atmos_client):
         """Test retrieving history for single month (still makes 1 request)."""
         path = Path(__file__).parent.resolve() / 'data' / 'usage.xls'
-        with open(path, 'rb') as f:
+        with path.open('rb') as f:
             raw_usage = f.read()
 
         mock_get_response = MagicMock(
@@ -384,7 +403,7 @@ class TestGetUsageHistory:
     def test_get_usage_history_multiple_months(self, mock_session_get, atmos_client):
         """Test retrieving multiple months of historical data (makes N requests)."""
         path = Path(__file__).parent.resolve() / 'data' / 'usage.xls'
-        with open(path, 'rb') as f:
+        with path.open('rb') as f:
             raw_usage = f.read()
 
         mock_get_response = MagicMock(
@@ -401,14 +420,16 @@ class TestGetUsageHistory:
         # Should return 6 copies of the data (one for each month)
         expected = usage_xls_data * 6
         assert processed == expected
-        # Should make 6 requests (one for each month) - transparent about multiple requests
+        # Should make 6 requests (one per month) - transparent about API calls
         assert mock_session_get.call_count == 6
 
     @patch('requests.Session.get')
     def test_get_usage_history_invalid_content_type(
-        self, mock_session_get, atmos_client
+        self,
+        mock_session_get,
+        atmos_client,
     ):
-        """Test error handling in get_usage_history when response has invalid content type."""
+        """Test error handling in get_usage_history for invalid content type."""
         mock_get_response = MagicMock(
             url=DOWNLOAD_URL,
             content=b'<html>error page</html>',
@@ -422,9 +443,9 @@ class TestGetUsageHistory:
 
     @patch('requests.Session.get')
     def test_get_usage_history_invalid_workbook(self, mock_session_get, atmos_client):
-        """Test error handling in get_usage_history with invalid workbook data."""
+        """Test error handling in get_usage_history with invalid workbook."""
         path = Path(__file__).parent.resolve() / 'data' / 'invalidformat.xls'
-        with open(path, 'rb') as f:
+        with path.open('rb') as f:
             raw_usage = f.read()
 
         mock_get_response = MagicMock(

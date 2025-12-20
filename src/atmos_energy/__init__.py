@@ -1,12 +1,12 @@
 """Atmos Energy Account Center client library."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
-from bs4 import BeautifulSoup
-from dateutil.relativedelta import relativedelta
 import requests
 import xlrd
+from bs4 import BeautifulSoup
+from dateutil.relativedelta import relativedelta
 
 from .constants import (
     DEFAULT_BILLING_PERIOD,
@@ -44,7 +44,10 @@ class AtmosEnergy:
         self._session = requests.Session()
 
     def _request(
-        self, url: str, method: str = 'GET', data: dict | None = None
+        self,
+        url: str,
+        method: str = 'GET',
+        data: dict | None = None,
     ) -> requests.Response:
         """
         Make an HTTP request through the session and log details.
@@ -52,13 +55,15 @@ class AtmosEnergy:
         Args:
             url (str): The URL to send the request to.
             method (str): The HTTP method ('GET' or 'POST'). Defaults to 'GET'.
-            data (dict, optional): Form data to send in a POST request. Defaults to None.
+            data (dict, optional): Form data to send in a POST request.
+                Defaults to None.
 
         Returns:
             requests.Response: The HTTP response object.
 
         Raises:
-            requests.exceptions.HTTPError: If the response status code indicates an error.
+            requests.exceptions.HTTPError: If the response status code
+                indicates an error.
         """
         _LOGGER.debug('Making %s request to %s', method, url)
 
@@ -71,7 +76,9 @@ class AtmosEnergy:
             response.raise_for_status()
         except requests.exceptions.HTTPError:
             _LOGGER.error(
-                'HTTP request failed: %s %s', response.status_code, response.reason
+                'HTTP request failed: %s %s',
+                response.status_code,
+                response.reason,
             )
             raise
 
@@ -95,7 +102,7 @@ class AtmosEnergy:
         Returns:
             str: The generated download URL.
         """
-        timestamp = datetime.today().strftime('%m%d%Y%H:%M:%S')
+        timestamp = datetime.now(tz=timezone.utc).strftime('%m%d%Y%H:%M:%S')
         return DOWNLOAD_URL.format(billing_period=billing_period, timestamp=timestamp)
 
     def _mk_billing_period_string(self, months_ago: int) -> str:
@@ -113,7 +120,9 @@ class AtmosEnergy:
         if months_ago == 0:
             return DEFAULT_BILLING_PERIOD
 
-        historical_period = datetime.today() - relativedelta(months=months_ago)
+        historical_period = datetime.now(tz=timezone.utc) - relativedelta(
+            months=months_ago,
+        )
         return historical_period.strftime('%B,%Y')
 
     def _validate_response_content(self, response: requests.Response) -> None:
@@ -144,7 +153,8 @@ class AtmosEnergy:
             raw_usage (bytes): The raw usage data in Excel binary format.
 
         Returns:
-            list[tuple[int, float]]: A list of tuples containing (Unix timestamp, reading).
+            list[tuple[int, float]]: A list of (Unix timestamp, reading)
+                tuples.
 
         Raises:
             ValueError: If the workbook cannot be opened or parsed.
@@ -161,7 +171,10 @@ class AtmosEnergy:
         for row_idx in range(1, sheet.nrows):
             row = sheet.row(row_idx)
             reading = row[1].value
-            dt = datetime.strptime(str(row[3].value), '%m/%d/%Y')
+            dt = datetime.strptime(
+                str(row[3].value),
+                '%m/%d/%Y',
+            ).replace(tzinfo=timezone.utc)
             usage.append((int(dt.timestamp()), reading))
 
         return usage
@@ -213,10 +226,12 @@ class AtmosEnergy:
         Makes a single API request to retrieve the current month's usage data.
 
         Returns:
-            list[tuple[int, float]]: A list of tuples containing (Unix timestamp, reading).
+            list[tuple[int, float]]: A list of (Unix timestamp, reading)
+                tuples.
 
         Raises:
-            TypeError: If the response content type is invalid or workbook parsing fails.
+            TypeError: If the response content type is invalid or
+                workbook parsing fails.
         """
         billing_period = self._mk_billing_period_string(0)
         download_url = self._mk_download_url_string(billing_period)
@@ -234,14 +249,16 @@ class AtmosEnergy:
         usage data for the specified number of months.
 
         Args:
-            months (int): The number of billing periods to retrieve (e.g., 6 for 6 months).
+            months (int): The number of billing periods to retrieve
+                (e.g., 6 for 6 months).
 
         Returns:
-            list[tuple[int, float]]: A list of tuples containing (Unix timestamp, reading)
-                aggregated across all requested periods.
+            list[tuple[int, float]]: A list of (Unix timestamp, reading)
+                tuples aggregated across all requested periods.
 
         Raises:
-            TypeError: If the response content type is invalid or workbook parsing fails.
+            TypeError: If the response content type is invalid or
+                workbook parsing fails.
         """
         all_usage = []
 

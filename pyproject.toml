@@ -64,12 +64,38 @@ python_functions = ["test_*"]
 atmos-energy = "atmos_energy.cli:main"
 
 [tool.ruff.lint]
-# Enable flake8-bugbear (`B`) rules, in addition to the defaults.
-select = ["E4", "E7", "E9", "F", "B"]
+extend-select = [
+    "A",        # detect shadowed builtins
+    "B",        # Bugbear rules
+    "F",        # Pyflakes rules
+    "W",        # PyCodeStyle warnings
+    "E",        # PyCodeStyle errors
+    "I",        # Sort imports properly
+    "UP",       # Warn if certain things can changed due to newer Python versions
+    "C4",       # Catch incorrect use of comprehensions, dict, list, etc
+    "FA",       # Enforce from __future__ import annotations
+    "ISC",      # Good use of string concatenation
+    "ICN",      # Use common import conventions
+    "RET",      # Good return practices
+    "SIM",      # Common simplification rules
+    "TID",      # Some good import practices
+    "TC",       # Enforce importing certain types in a TYPE_CHECKING block
+    "PTH",      # Use pathlib instead of os.path
+    "TD",       # Be diligent with TODO comments
+    "NPY",      # Some numpy-specific things
+    "COM",      # enforce trailing comma rules
+    "DTZ",      # require strict timezone manipulation with datetime
+    "FBT",      # detect boolean traps
+    "N",        # enforce naming conventions, e.g. ClassName vs function_name
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
 
 [tool.ruff.format]
 # Use single quotes in `ruff format`.
 quote-style = "single"
+indent-style = "space"
 
 [tool.uv.build-backend]
 module-name = "atmos_energy"

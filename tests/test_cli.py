@@ -281,7 +281,7 @@ class TestMainCli:
 
             main()
 
-        # Verify get_usage was called (no parameters - single request)
+        # Verify get_current_usage was called (no parameters - single request)
         mock_client.get_current_usage.assert_called_once_with()
         mock_client.login.assert_called_once()
         mock_client.logout.assert_called_once()
@@ -410,7 +410,8 @@ class TestMainCli:
         mock_atmos_class.return_value = mock_client
 
         with patch(
-            'sys.argv', ['cli', '--username', 'user', '--password', 'pass', '--verbose']
+            'sys.argv',
+            ['cli', '--username', 'user', '--password', 'pass', '--verbose'],
         ):
             from atmos_energy.cli import main  # pylint: disable=import-outside-toplevel
 
