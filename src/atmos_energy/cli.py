@@ -3,7 +3,7 @@
 import argparse
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -12,7 +12,8 @@ from atmos_energy import AtmosEnergy
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 )
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ def format_timestamp(timestamp: int) -> str:
     Returns:
         str: ISO format timestamp (e.g., '2025-12-10T15:30:45').
     """
-    return datetime.fromtimestamp(timestamp).isoformat()
+    return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
 
 
 def write_csv(data: list[tuple[int, float]], output_file: str) -> None:
@@ -44,7 +45,7 @@ def write_csv(data: list[tuple[int, float]], output_file: str) -> None:
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with output_path.open('w', encoding='utf-8') as f:
         f.write('timestamp,value\n')
         for timestamp, value in data:
             f.write(f'{format_timestamp(timestamp)},{value}\n')
@@ -82,7 +83,7 @@ def load_config(config_file: str) -> dict:
         raise FileNotFoundError(f'Config file not found: {config_file}')
 
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with config_path.open(encoding='utf-8') as f:
             config = yaml.safe_load(f)
     except yaml.YAMLError as e:
         raise ValueError(f'Invalid YAML in config file: {e}') from e
@@ -169,7 +170,10 @@ Example usage:
         help='Output to CSV file (default: print to console)',
     )
     parser.add_argument(
-        '--verbose', '-v', action='store_true', help='Enable verbose logging'
+        '--verbose',
+        '-v',
+        action='store_true',
+        help='Enable verbose logging',
     )
 
     args = parser.parse_args()
@@ -191,7 +195,8 @@ Example usage:
     # Validate credentials
     if not args.username or not args.password:
         parser.error(
-            'Username and password must be provided via --username/--password or --config'
+            'Username and password must be provided via --username/--password'
+            ' or --config',
         )
 
     # Initialize client
