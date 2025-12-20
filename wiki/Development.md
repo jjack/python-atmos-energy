@@ -126,7 +126,7 @@ The project includes 53 comprehensive tests:
   - Initialization, request handling, URL generation
   - Billing period calculation, response validation
   - Usage data formatting, login/logout, error handling
-  - Transparent request count tests for both `get_usage()` and `get_usage_history()`
+  - Transparent request count tests for both `get_current_usage()` and `get_usage_history()`
 
 - **CLI Tests** (`test_cli.py`): 26 tests
   - Timestamp formatting, CSV writing
@@ -371,7 +371,7 @@ client = AtmosEnergy(username='user@example.com', password='mypassword')
 client.login()
 
 # Get current month (1 API request)
-usage = client.get_usage()
+usage = client.get_current_usage()
 
 # Get historical data (N API requests)
 history = client.get_usage_history(months=6)

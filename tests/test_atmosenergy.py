@@ -316,7 +316,7 @@ class TestGetUsage:
         )
         mock_session_get.return_value = mock_get_response
 
-        processed = atmos_client.get_usage()
+        processed = atmos_client.get_current_usage()
 
         assert processed == usage_xls_data
         # Should make exactly 1 request for current month
@@ -334,7 +334,7 @@ class TestGetUsage:
         mock_session_get.return_value = mock_get_response
 
         with pytest.raises(Exception, match='Unexpected Content Type'):
-            atmos_client.get_usage()
+            atmos_client.get_current_usage()
 
     @patch('requests.Session.get')
     def test_get_usage_invalid_workbook(self, mock_session_get, atmos_client):
@@ -353,7 +353,7 @@ class TestGetUsage:
         mock_session_get.return_value = mock_get_response
 
         with pytest.raises(Exception, match='Unable to Open Workbook'):
-            atmos_client.get_usage()
+            atmos_client.get_current_usage()
 
 
 class TestGetUsageHistory:

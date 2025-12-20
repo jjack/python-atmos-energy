@@ -32,7 +32,7 @@ client = AtmosEnergy(username='user@example.com', password='mypassword')
 client.login()
 
 # Get current month usage (1 API request)
-usage = client.get_usage()
+usage = client.get_current_usage()
 
 # Get 6 months of historical data (6 API requests)
 usage_history = client.get_usage_history(months=6)

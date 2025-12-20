@@ -207,9 +207,9 @@ class AtmosEnergy:
         self._request(LOGOUT_URL)
         self._session.close()
 
-    def get_usage(self) -> list[tuple[int, float]]:
+    def get_current_usage(self) -> list[tuple[int, float]]:
         """
-        Retrieve usage data for the current billing period.
+        Retrieve unbilled usage data for the current billing period.
 
         Makes a single API request to retrieve the current month's usage data.
 

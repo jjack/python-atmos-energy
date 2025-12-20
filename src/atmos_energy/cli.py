@@ -199,7 +199,7 @@ Example usage:
     try:
         client.login()
         if args.months == 1:
-            all_data = client.get_usage()
+            all_data = client.get_current_usage()
         else:
             all_data = client.get_usage_history(args.months)
 

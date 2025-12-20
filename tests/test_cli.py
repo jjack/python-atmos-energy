@@ -272,7 +272,7 @@ class TestMainCli:
         """Test default behavior retrieves current month only (1 request)."""
         # Setup mocks
         mock_client = MagicMock()
-        mock_client.get_usage.return_value = [(1765398645, 1.5)]
+        mock_client.get_current_usage.return_value = [(1765398645, 1.5)]
         mock_atmos_class.return_value = mock_client
 
         # Mock sys.argv
@@ -282,7 +282,7 @@ class TestMainCli:
             main()
 
         # Verify get_usage was called (no parameters - single request)
-        mock_client.get_usage.assert_called_once_with()
+        mock_client.get_current_usage.assert_called_once_with()
         mock_client.login.assert_called_once()
         mock_client.logout.assert_called_once()
 
@@ -310,7 +310,7 @@ class TestMainCli:
         """Test CSV file output."""
         mock_client = MagicMock()
         data = [(1765398645, 1.5), (1765485045, 2.0)]
-        mock_client.get_usage.return_value = data
+        mock_client.get_current_usage.return_value = data
         mock_atmos_class.return_value = mock_client
 
         with patch(
@@ -406,7 +406,7 @@ class TestMainCli:
     def test_main_verbose_logging(self, mock_atmos_class):
         """Test verbose logging flag."""
         mock_client = MagicMock()
-        mock_client.get_usage.return_value = [(1762263045, 1.5)]
+        mock_client.get_current_usage.return_value = [(1762263045, 1.5)]
         mock_atmos_class.return_value = mock_client
 
         with patch(

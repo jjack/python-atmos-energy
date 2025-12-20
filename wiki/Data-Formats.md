@@ -4,7 +4,7 @@
 
 ### Python API Return Format
 
-The `get_usage()` method returns a list of tuples:
+The `get_current_usage()` method returns a list of tuples:
 
 ```python
 [
@@ -123,7 +123,7 @@ from datetime import datetime
 client = AtmosEnergy(username='user@example.com', password='mypassword')
 client.login()
 
-usage_data = client.get_usage(months=12)
+usage_data = client.get_current_usage(months=12)
 
 # Calculate total usage
 total = sum(value for _, value in usage_data)
@@ -154,7 +154,7 @@ from atmos_energy import AtmosEnergy
 
 client = AtmosEnergy(username='user@example.com', password='mypassword')
 client.login()
-usage_data = client.get_usage(months=6)
+usage_data = client.get_current_usage(months=6)
 
 # Convert to JSON-friendly format
 data = [
@@ -179,7 +179,7 @@ from atmos_energy import AtmosEnergy
 
 client = AtmosEnergy(username='user@example.com', password='mypassword')
 client.login()
-usage_data = client.get_usage(months=12)
+usage_data = client.get_current_usage(months=12)
 
 # Create DataFrame
 df = pd.DataFrame(

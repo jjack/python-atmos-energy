@@ -27,7 +27,7 @@ client = AtmosEnergy(username='user@example.com', password='mypassword')
 
 Authenticate with the Atmos Energy Account Center.
 
-This method must be called before calling `get_usage()`. It retrieves the form ID required for subsequent API calls and establishes an authenticated session.
+This method must be called before calling `get_current_usage()`. It retrieves the form ID required for subsequent API calls and establishes an authenticated session.
 
 **Raises:**
 - `Exception`: If login fails or form ID cannot be found
@@ -42,7 +42,7 @@ except Exception as e:
 
 ---
 
-### `get_usage() -> list[tuple[int, float]]`
+### `get_current_usage() -> list[tuple[int, float]]`
 
 Retrieve usage data for the current billing period.
 
@@ -59,7 +59,7 @@ Makes a **single API request** to retrieve the current month's usage data.
 **Example:**
 ```python
 # Get current month usage (1 API request)
-current = client.get_usage()
+current = client.get_current_usage()
 
 for timestamp, usage in current:
     print(f"Usage: {usage} at {timestamp}")
@@ -100,7 +100,7 @@ for timestamp, usage in historical:
 
 | Method | Use Case | Requests |
 |--------|----------|----------|
-| `get_usage()` | Get current month's data | 1 |
+| `get_current_usage()` | Get current month's data | 1 |
 | `get_usage_history(months=1)` | Explicitly request single month as history | 1 |
 | `get_usage_history(months=6)` | Get 6 months of historical data | 6 |
 | `get_usage_history(months=12)` | Get 1 year of historical data | 12 |
@@ -119,7 +119,7 @@ This should be called when done to properly close the authenticated session.
 ```python
 try:
     client.login()
-    usage = client.get_usage()
+    usage = client.get_current_usage()
     # Process usage...
 finally:
     client.logout()  # Ensure logout even if an error occurs
@@ -140,7 +140,7 @@ try:
     client.login()
     
     # Get current month (1 API request)
-    usage_data = client.get_usage()
+    usage_data = client.get_current_usage()
     
     for timestamp, value in usage_data:
         print(f"Timestamp: {timestamp}, Usage: {value}")
@@ -206,9 +206,9 @@ client = AtmosEnergy(username='user@example.com', password='mypassword')
 try:
     client.login()
     
-    # For Home Assistant, prefer get_usage() for minimal API calls
+    # For Home Assistant, prefer get_current_usage() for minimal API calls
     # when only current month is needed
-    current_usage = client.get_usage()  # Fast: 1 API request
+    current_usage = client.get_current_usage()  # Fast: 1 API request
     
     # Use get_usage_history() only when historical data is needed
     # Remember: months=12 makes 12 API requests
@@ -224,7 +224,7 @@ finally:
 
 ### Usage Data Format
 
-`get_usage()` returns a list of tuples:
+`get_current_usage()` returns a list of tuples:
 
 ```python
 [
