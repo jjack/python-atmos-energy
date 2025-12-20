@@ -4,16 +4,16 @@ build-backend = "uv_build"
 
 [project]
 name = "atmos-energy"
-version = "0.1.4"
+version = "0.1.5"
 description = "Python client for retrieving energy usage data from Atmos Energy Account Center"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
 authors = [
-    {name = "Jeremy Jack", email = "jeremyjack@gmail.com"},
+    {name = "Jeremy Jack", email = "jeremy@rocketscientry.com"},
 ]
 maintainers = [
-    {name = "Jeremy Jack", email = "jeremyjack@gmail.com"},
+    {name = "Jeremy Jack", email = "jeremy@rocketscientry.com"},
 ]
 keywords = ["atmos-energy", "energy", "usage", "api-client"]
 classifiers = [

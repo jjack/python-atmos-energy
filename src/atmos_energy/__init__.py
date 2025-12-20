@@ -10,7 +10,6 @@ import xlrd
 
 from .constants import (
     DEFAULT_BILLING_PERIOD,
-    DEFAULT_USAGE_MONTHS,
     DOWNLOAD_CONTENT_TYPE,
     DOWNLOAD_URL,
     LOGIN_FORM_ID_URL,
