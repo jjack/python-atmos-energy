@@ -269,7 +269,7 @@ class TestMainCli:
 
     @patch('atmos_energy.cli.AtmosEnergy')
     def test_main_current_usage_default(self, mock_atmos_class):
-        """Test default behavior retrieves current month only."""
+        """Test default behavior retrieves current month only (1 request)."""
         # Setup mocks
         mock_client = MagicMock()
         mock_client.get_usage.return_value = [(1765398645, 1.5)]
@@ -281,16 +281,16 @@ class TestMainCli:
 
             main()
 
-        # Verify get_usage was called with 1 month (default)
-        mock_client.get_usage.assert_called_once_with(1)
+        # Verify get_usage was called (no parameters - single request)
+        mock_client.get_usage.assert_called_once_with()
         mock_client.login.assert_called_once()
         mock_client.logout.assert_called_once()
 
     @patch('atmos_energy.cli.AtmosEnergy')
     def test_main_historical_usage(self, mock_atmos_class):
-        """Test retrieval of historical usage with --months flag."""
+        """Test retrieval of historical usage with --months flag (multiple requests)."""
         mock_client = MagicMock()
-        mock_client.get_usage.return_value = [(1765398645, 1.5)] * 90
+        mock_client.get_usage_history.return_value = [(1765398645, 1.5)] * 90
         mock_atmos_class.return_value = mock_client
 
         with patch(
@@ -301,7 +301,8 @@ class TestMainCli:
 
             main()
 
-        mock_client.get_usage.assert_called_once_with(3)
+        # Verify get_usage_history was called with 3 months
+        mock_client.get_usage_history.assert_called_once_with(3)
 
     @patch('atmos_energy.cli.AtmosEnergy')
     @patch('atmos_energy.cli.write_csv')
@@ -362,7 +363,7 @@ class TestMainCli:
         mock_load_config.return_value = mock_config
 
         mock_client = MagicMock()
-        mock_client.get_usage.return_value = [(1762263045, 1.5)]
+        mock_client.get_usage_history.return_value = [(1762263045, 1.5)] * 2
         mock_atmos_class.return_value = mock_client
 
         with patch('sys.argv', ['cli', '--config', 'config.yaml']):
@@ -372,6 +373,8 @@ class TestMainCli:
 
         mock_load_config.assert_called_once_with('config.yaml')
         mock_client.login.assert_called_once()
+        # Should call get_usage_history with 2 months since months=2 in config
+        mock_client.get_usage_history.assert_called_once_with(2)
 
     @patch('atmos_energy.cli.load_config')
     def test_main_invalid_config_file(self, mock_load_config):

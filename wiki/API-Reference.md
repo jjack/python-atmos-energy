@@ -42,12 +42,11 @@ except Exception as e:
 
 ---
 
-### `get_usage(months: int = 1) -> list[tuple[int, float]]`
+### `get_usage() -> list[tuple[int, float]]`
 
-Retrieve usage data for the specified number of billing periods.
+Retrieve usage data for the current billing period.
 
-**Args:**
-- `months` (int, optional): Number of billing periods to retrieve. Default is 1 (current month).
+Makes a **single API request** to retrieve the current month's usage data.
 
 **Returns:**
 - `list[tuple[int, float]]`: A list of (timestamp, value) tuples where:
@@ -59,16 +58,54 @@ Retrieve usage data for the specified number of billing periods.
 
 **Example:**
 ```python
-# Get current month usage
+# Get current month usage (1 API request)
 current = client.get_usage()
 
-# Get 6 months of historical data
-historical = client.get_usage(months=6)
+for timestamp, usage in current:
+    print(f"Usage: {usage} at {timestamp}")
+```
 
-# Process the data
+---
+
+### `get_usage_history(months: int) -> list[tuple[int, float]]`
+
+Retrieve historical usage data for multiple billing periods.
+
+Makes **multiple API requests** (one per billing period) to retrieve historical usage data for the specified number of months.
+
+**Args:**
+- `months` (int): Number of billing periods to retrieve (e.g., 6 for 6 months)
+
+**Returns:**
+- `list[tuple[int, float]]`: A list of (timestamp, value) tuples aggregated across all requested periods where:
+  - `timestamp` (int): Unix timestamp (seconds since epoch)
+  - `value` (float): Energy usage reading (in the unit reported by Atmos Energy)
+
+**Raises:**
+- `Exception`: If content type is invalid or workbook parsing fails
+
+**Example:**
+```python
+# Get 6 months of historical data (6 API requests)
+historical = client.get_usage_history(months=6)
+
+# Process the aggregated data
 for timestamp, usage in historical:
     print(f"Usage: {usage} at {timestamp}")
 ```
+
+---
+
+### When to Use Each Method
+
+| Method | Use Case | Requests |
+|--------|----------|----------|
+| `get_usage()` | Get current month's data | 1 |
+| `get_usage_history(months=1)` | Explicitly request single month as history | 1 |
+| `get_usage_history(months=6)` | Get 6 months of historical data | 6 |
+| `get_usage_history(months=12)` | Get 1 year of historical data | 12 |
+
+**Note:** The distinction between methods is intentional to make the number of API requests transparent to the caller. This is important for performance considerations, especially in Home Assistant integrations.
 
 ---
 
@@ -90,33 +127,29 @@ finally:
 
 ---
 
-## Usage Pattern
+## Usage Patterns
 
-### Basic Pattern
+### Get Current Month Usage (Single Request)
 
 ```python
 from atmos_energy import AtmosEnergy
 
-# Create client
 client = AtmosEnergy(username='user@example.com', password='mypassword')
 
 try:
-    # Login
     client.login()
     
-    # Get usage data
-    usage_data = client.get_usage(months=3)
+    # Get current month (1 API request)
+    usage_data = client.get_usage()
     
-    # Process the data
     for timestamp, value in usage_data:
         print(f"Timestamp: {timestamp}, Usage: {value}")
         
 finally:
-    # Always logout
     client.logout()
 ```
 
-### Error Handling
+### Get Historical Data (Multiple Requests)
 
 ```python
 from atmos_energy import AtmosEnergy
@@ -125,7 +158,33 @@ client = AtmosEnergy(username='user@example.com', password='mypassword')
 
 try:
     client.login()
-    usage = client.get_usage(months=6)
+    
+    # Get 6 months of historical data (6 API requests)
+    usage_data = client.get_usage_history(months=6)
+    
+    for timestamp, value in usage_data:
+        print(f"Timestamp: {timestamp}, Usage: {value}")
+        
+finally:
+    client.logout()
+```
+
+### Error Handling Pattern
+
+```python
+from atmos_energy import AtmosEnergy
+
+client = AtmosEnergy(username='user@example.com', password='mypassword')
+
+try:
+    client.login()
+    
+    # Get usage data
+    usage = client.get_usage_history(months=3)
+    
+    # Process the data
+    total_usage = sum(value for _, value in usage)
+    print(f"Total usage: {total_usage}")
     
 except Exception as e:
     print(f"Error retrieving usage data: {e}")
@@ -135,6 +194,28 @@ finally:
         client.logout()
     except Exception as e:
         print(f"Error during logout: {e}")
+```
+
+### Performance Consideration for Home Assistant
+
+```python
+from atmos_energy import AtmosEnergy
+
+client = AtmosEnergy(username='user@example.com', password='mypassword')
+
+try:
+    client.login()
+    
+    # For Home Assistant, prefer get_usage() for minimal API calls
+    # when only current month is needed
+    current_usage = client.get_usage()  # Fast: 1 API request
+    
+    # Use get_usage_history() only when historical data is needed
+    # Remember: months=12 makes 12 API requests
+    historical_usage = client.get_usage_history(months=12)  # Slow: 12 API requests
+    
+finally:
+    client.logout()
 ```
 
 ---

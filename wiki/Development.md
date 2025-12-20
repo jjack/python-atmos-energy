@@ -49,8 +49,8 @@ python-atmos-energy/
 │       ├── constants.py          # Configuration constants
 │       └── py.typed              # PEP 561 type hints marker
 ├── tests/
-│   ├── test_atmosenergy.py       # API tests (22 tests)
-│   └── test_cli.py               # CLI tests (28 tests)
+│   ├── test_atmosenergy.py       # API tests (27 tests)
+│   └── test_cli.py               # CLI tests (26 tests)
 ├── .github/
 │   └── workflows/
 │       └── build.yml             # CI/CD pipeline
@@ -120,17 +120,19 @@ uv run pytest --cov=atmos_energy
 
 ### Current Coverage
 
-The project includes 50 comprehensive tests:
+The project includes 53 comprehensive tests:
 
-- **API Tests** (`test_atmosenergy.py`): 22 tests
+- **API Tests** (`test_atmosenergy.py`): 27 tests (including 4 new `get_usage_history` tests)
   - Initialization, request handling, URL generation
   - Billing period calculation, response validation
   - Usage data formatting, login/logout, error handling
+  - Transparent request count tests for both `get_usage()` and `get_usage_history()`
 
-- **CLI Tests** (`test_cli.py`): 28 tests
+- **CLI Tests** (`test_cli.py`): 26 tests
   - Timestamp formatting, CSV writing
   - Table printing, config loading
   - Argument merging, end-to-end CLI tests
+  - Routing to correct API method based on `--months` parameter
 
 ---
 
@@ -367,7 +369,12 @@ logging.basicConfig(level=logging.DEBUG)
 
 client = AtmosEnergy(username='user@example.com', password='mypassword')
 client.login()
+
+# Get current month (1 API request)
 usage = client.get_usage()
+
+# Get historical data (N API requests)
+history = client.get_usage_history(months=6)
 ```
 
 ### CLI Debug Mode

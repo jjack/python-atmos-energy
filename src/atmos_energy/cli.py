@@ -198,7 +198,10 @@ Example usage:
     client = AtmosEnergy(args.username, args.password)
     try:
         client.login()
-        all_data = client.get_usage(args.months)
+        if args.months == 1:
+            all_data = client.get_usage()
+        else:
+            all_data = client.get_usage_history(args.months)
 
         # Output data
         if args.output:

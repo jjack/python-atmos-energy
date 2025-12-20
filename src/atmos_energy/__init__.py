@@ -207,16 +207,39 @@ class AtmosEnergy:
         self._request(LOGOUT_URL)
         self._session.close()
 
-    def get_usage(self, months: int = DEFAULT_USAGE_MONTHS) -> list[tuple[int, float]]:
+    def get_usage(self) -> list[tuple[int, float]]:
         """
-        Retrieve usage data for the specified number of billing periods.
+        Retrieve usage data for the current billing period.
 
-        Args:
-            months (int, optional): The number of total billing periods to retrieve.
-                Defaults to 1 (current period only).
+        Makes a single API request to retrieve the current month's usage data.
 
         Returns:
             list[tuple[int, float]]: A list of tuples containing (Unix timestamp, reading).
+
+        Raises:
+            TypeError: If the response content type is invalid or workbook parsing fails.
+        """
+        billing_period = self._mk_billing_period_string(0)
+        download_url = self._mk_download_url_string(billing_period)
+        response = self._request(download_url)
+
+        self._validate_response_content(response)
+
+        return self._fmt_usage(response.content)
+
+    def get_usage_history(self, months: int) -> list[tuple[int, float]]:
+        """
+        Retrieve historical usage data for multiple billing periods.
+
+        Makes multiple API requests (one per billing period) to retrieve historical
+        usage data for the specified number of months.
+
+        Args:
+            months (int): The number of billing periods to retrieve (e.g., 6 for 6 months).
+
+        Returns:
+            list[tuple[int, float]]: A list of tuples containing (Unix timestamp, reading)
+                aggregated across all requested periods.
 
         Raises:
             TypeError: If the response content type is invalid or workbook parsing fails.

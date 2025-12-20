@@ -14,6 +14,8 @@ Display current month usage in the console:
 atmos-energy --username user@example.com --password mypassword
 ```
 
+**Note:** This makes **1 API request** to fetch the current billing period.
+
 ### Get Historical Data
 
 Retrieve 6 months of usage data:
@@ -21,6 +23,8 @@ Retrieve 6 months of usage data:
 ```bash
 atmos-energy --username user@example.com --password mypassword --months 6
 ```
+
+**Important:** This makes **6 API requests** (one per month). For performance-sensitive environments like Home Assistant, prefer `--months 1` for routine checks and use larger values only when historical analysis is needed.
 
 ### Export to CSV
 
@@ -54,9 +58,42 @@ options:
   --username, -u         Atmos Energy account username or email (required if no config)
   --password, -p         Atmos Energy account password (required if no config)
   --config, -c FILE      Path to YAML configuration file
-  --months N             Number of months to retrieve (default: 1)
+  --months N             Number of months to retrieve (default: 1 for current month only)
+                         ⚠️  Note: Each month requires 1 API request, so --months 6 makes 6 requests
   --output, -o FILE      Output to CSV file (default: print to console)
   --verbose, -v          Enable verbose logging
+```
+
+---
+
+## Performance Considerations
+
+### API Request Count
+
+The `--months` parameter directly affects how many API requests are made:
+
+| Months | API Requests | Best For |
+|--------|--------------|----------|
+| 1 (default) | 1 | Quick status checks, Home Assistant |
+| 3 | 3 | Weekly reports |
+| 6 | 6 | Monthly energy analysis |
+| 12 | 12 | Annual reports (slower) |
+
+### Recommendations
+
+- **Home Assistant integrations:** Use default `--months 1` for routine updates
+- **Daily checks:** Use `--months 1` to minimize API calls
+- **Historical analysis:** Use larger values only when needed for reports
+- **Rate limiting:** Be aware that 12 consecutive requests may take several seconds
+
+### Example: Efficient Home Assistant Setup
+
+```yaml
+# config.yaml for regular Home Assistant polling
+username: user@example.com
+password: mypassword
+months: 1  # Only current month - fast and minimal API calls
+output: /data/atmos_energy/current.csv
 ```
 
 ---

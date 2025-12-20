@@ -302,7 +302,7 @@ class TestGetUsage:
 
     @patch('requests.Session.get')
     def test_get_usage_current_month(self, mock_session_get, atmos_client):
-        """Test retrieving current month usage (1 month)."""
+        """Test retrieving current month usage (single request)."""
         path = Path(__file__).parent.resolve() / 'data' / 'usage.xls'
         with open(path, 'rb') as f:
             raw_usage = f.read()
@@ -316,34 +316,11 @@ class TestGetUsage:
         )
         mock_session_get.return_value = mock_get_response
 
-        processed = atmos_client.get_usage(1)
+        processed = atmos_client.get_usage()
 
         assert processed == usage_xls_data
+        # Should make exactly 1 request for current month
         mock_session_get.assert_called_once()
-
-    @patch('requests.Session.get')
-    def test_get_usage_multiple_months(self, mock_session_get, atmos_client):
-        """Test retrieving multiple months of usage data."""
-        path = Path(__file__).parent.resolve() / 'data' / 'usage.xls'
-        with open(path, 'rb') as f:
-            raw_usage = f.read()
-
-        mock_get_response = MagicMock(
-            url=DOWNLOAD_URL,
-            content=raw_usage,
-            status_code=200,
-            headers={'Content-Type': DOWNLOAD_CONTENT_TYPE},
-            stream=True,
-        )
-        mock_session_get.return_value = mock_get_response
-
-        processed = atmos_client.get_usage(6)
-
-        # Should return 6 copies of the data (one for each month)
-        expected = usage_xls_data * 6
-        assert processed == expected
-        # Should make 6 requests (one for each month)
-        assert mock_session_get.call_count == 6
 
     @patch('requests.Session.get')
     def test_get_usage_invalid_content_type(self, mock_session_get, atmos_client):
@@ -357,7 +334,7 @@ class TestGetUsage:
         mock_session_get.return_value = mock_get_response
 
         with pytest.raises(Exception, match='Unexpected Content Type'):
-            atmos_client.get_usage(1)
+            atmos_client.get_usage()
 
     @patch('requests.Session.get')
     def test_get_usage_invalid_workbook(self, mock_session_get, atmos_client):
@@ -376,11 +353,15 @@ class TestGetUsage:
         mock_session_get.return_value = mock_get_response
 
         with pytest.raises(Exception, match='Unable to Open Workbook'):
-            atmos_client.get_usage(1)
+            atmos_client.get_usage()
+
+
+class TestGetUsageHistory:
+    """Tests for the get_usage_history method."""
 
     @patch('requests.Session.get')
-    def test_get_usage_default_parameter(self, mock_session_get, atmos_client):
-        """Test get_usage with default parameter (should retrieve current month)."""
+    def test_get_usage_history_single_month(self, mock_session_get, atmos_client):
+        """Test retrieving history for single month (still makes 1 request)."""
         path = Path(__file__).parent.resolve() / 'data' / 'usage.xls'
         with open(path, 'rb') as f:
             raw_usage = f.read()
@@ -394,7 +375,66 @@ class TestGetUsage:
         )
         mock_session_get.return_value = mock_get_response
 
-        # Call without specifying months parameter
-        processed = atmos_client.get_usage()
+        processed = atmos_client.get_usage_history(1)
 
         assert processed == usage_xls_data
+        mock_session_get.assert_called_once()
+
+    @patch('requests.Session.get')
+    def test_get_usage_history_multiple_months(self, mock_session_get, atmos_client):
+        """Test retrieving multiple months of historical data (makes N requests)."""
+        path = Path(__file__).parent.resolve() / 'data' / 'usage.xls'
+        with open(path, 'rb') as f:
+            raw_usage = f.read()
+
+        mock_get_response = MagicMock(
+            url=DOWNLOAD_URL,
+            content=raw_usage,
+            status_code=200,
+            headers={'Content-Type': DOWNLOAD_CONTENT_TYPE},
+            stream=True,
+        )
+        mock_session_get.return_value = mock_get_response
+
+        processed = atmos_client.get_usage_history(6)
+
+        # Should return 6 copies of the data (one for each month)
+        expected = usage_xls_data * 6
+        assert processed == expected
+        # Should make 6 requests (one for each month) - transparent about multiple requests
+        assert mock_session_get.call_count == 6
+
+    @patch('requests.Session.get')
+    def test_get_usage_history_invalid_content_type(
+        self, mock_session_get, atmos_client
+    ):
+        """Test error handling in get_usage_history when response has invalid content type."""
+        mock_get_response = MagicMock(
+            url=DOWNLOAD_URL,
+            content=b'<html>error page</html>',
+            status_code=200,
+            headers={'Content-Type': 'text/html'},
+        )
+        mock_session_get.return_value = mock_get_response
+
+        with pytest.raises(Exception, match='Unexpected Content Type'):
+            atmos_client.get_usage_history(3)
+
+    @patch('requests.Session.get')
+    def test_get_usage_history_invalid_workbook(self, mock_session_get, atmos_client):
+        """Test error handling in get_usage_history with invalid workbook data."""
+        path = Path(__file__).parent.resolve() / 'data' / 'invalidformat.xls'
+        with open(path, 'rb') as f:
+            raw_usage = f.read()
+
+        mock_get_response = MagicMock(
+            url=DOWNLOAD_URL,
+            content=raw_usage,
+            status_code=200,
+            headers={'Content-Type': DOWNLOAD_CONTENT_TYPE},
+            stream=True,
+        )
+        mock_session_get.return_value = mock_get_response
+
+        with pytest.raises(Exception, match='Unable to Open Workbook'):
+            atmos_client.get_usage_history(2)
